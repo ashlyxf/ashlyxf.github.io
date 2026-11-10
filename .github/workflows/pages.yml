@@ -1,0 +1,34 @@
+name: Publish QUANTA
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/pages.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Download complete portfolio
+        run: |
+          curl --fail --location --retry 3 https://github.com/ashlyxf/ashlyxf.github.io/releases/download/v1.0.0/quanta-portfolio.zip --output portfolio.zip
+          echo "2dfa6aab9fb3304e6b6f0f1288e27e9cdb49cc5cd3f527276cc1385a384d5b3d  portfolio.zip" | sha256sum --check
+          mkdir site
+          unzip -q portfolio.zip -d site
+          test -f site/index.html
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - name: Deploy portfolio
+        id: deployment
+        uses: actions/deploy-pages@v4
